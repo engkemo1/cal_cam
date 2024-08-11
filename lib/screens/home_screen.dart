@@ -1,5 +1,9 @@
+import 'dart:io';
+
+import 'package:cal_cam/screens/result.dart';
 import 'package:cal_cam/screens/widgets/custom_text_field.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -10,13 +14,55 @@ class HomeScreen extends StatelessWidget {
 
 
 
-  Future<void> _openCamera() async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.camera);
-    if (image != null) {
-      // Handle the image file here
-      print('Image path: ${image.path}');
-    }
-  }
+   Future<void> _openCamera(BuildContext context) async {
+     final XFile? image = await _picker.pickImage(source: ImageSource.camera);
+     if (image != null) {
+       // Handle the image file here
+       print('Image path: ${image.path}');
+       await uploadImage(File(image.path),context);
+     }
+   }
+
+   Future<void> uploadImage(File imageFile, BuildContext context) async {
+     final dio = Dio();
+
+     try {
+       // Prepare the image file as MultipartFile
+       String fileName = imageFile.path.split('/').last;
+       FormData formData = FormData.fromMap({
+         'image': await MultipartFile.fromFile(
+           imageFile.path,
+           filename: fileName,
+         ),
+       });
+
+       // Send the POST request to the server
+       Response response = await dio.post(
+         'http://10.0.2.2:8000/predict', // Change to match your setup
+         data: formData,
+       );
+
+       print(response);
+
+       // Handle the response
+       if (response.statusCode == 200) {
+         final responseBody = response.data;
+         String predictedLabel = responseBody['predicted_label'];
+         String caloriesInfo = responseBody['calories_info'];
+         Navigator.push(
+             context,
+             MaterialPageRoute(
+                 builder: (_) => Result(
+                     image: imageFile, predicted: predictedLabel, calories: caloriesInfo)));
+         print('Predicted Label: $predictedLabel');
+         print('Calories Info: $caloriesInfo');
+       } else {
+         print('Error: ${response.statusCode}');
+       }
+     } catch (e) {
+       print('Failed to upload image: $e');
+     }
+   }
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -210,7 +256,9 @@ class HomeScreen extends StatelessWidget {
                     child: Column(
                       children: [
                         InkWell(
-                          onTap: _openCamera,
+                          onTap: (){
+                            _openCamera(context);
+                          },
                           child: CustomTextField(
 
                             controller: TextEditingController(),
@@ -227,8 +275,9 @@ class HomeScreen extends StatelessWidget {
                         ),
                         SizedBox(height: 5,),
                     InkWell(
-                      onTap: _openCamera,
-                      child: CustomTextField(
+                        onTap: (){
+                          _openCamera(context);
+                        },                      child: CustomTextField(
 
                           controller: TextEditingController(),
                           suffixIcon:Image.asset("images/Vector(5).png",color: Colors.black,),
@@ -244,8 +293,9 @@ class HomeScreen extends StatelessWidget {
                         SizedBox(height: 5,),
 
                     InkWell(
-                      onTap: _openCamera,
-                      child: CustomTextField(
+                        onTap: (){
+                          _openCamera(context);
+                        },                      child: CustomTextField(
 
                           controller: TextEditingController(),
                           suffixIcon:Image.asset("images/Vector(5).png",color: Colors.black,),
@@ -261,8 +311,9 @@ class HomeScreen extends StatelessWidget {
                         SizedBox(height: 5,),
 
                     InkWell(
-                      onTap: _openCamera,
-                      child:CustomTextField(
+                        onTap: (){
+                          _openCamera(context);
+                        },                      child:CustomTextField(
 
                           controller: TextEditingController(),
                           suffixIcon:Image.asset("images/Vector(5).png",color: Colors.black,),

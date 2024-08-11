@@ -1,5 +1,6 @@
 import 'package:cal_cam/app_colors.dart';
 import 'package:cal_cam/screens/home_screen.dart';
+import 'package:cal_cam/screens/result.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -23,16 +24,16 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
 
-  Future<void> _openCamera() async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+  Future<void> _openCamera(BuildContext context) async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.camera);
     if (image != null) {
       // Handle the image file here
       print('Image path: ${image.path}');
-      await uploadImage(File(image.path));
+      await uploadImage(File(image.path),context);
     }
   }
 
-  Future<void> uploadImage(File imageFile) async {
+  Future<void> uploadImage(File imageFile, BuildContext context) async {
     final dio = Dio();
 
     try {
@@ -47,15 +48,22 @@ class _MainScreenState extends State<MainScreen> {
 
       // Send the POST request to the server
       Response response = await dio.post(
-        'http://127.0.0.1:8000/predict',
+        'http://10.0.2.2:8000/predict', // Change to match your setup
         data: formData,
       );
+
+      print(response);
 
       // Handle the response
       if (response.statusCode == 200) {
         final responseBody = response.data;
         String predictedLabel = responseBody['predicted_label'];
         String caloriesInfo = responseBody['calories_info'];
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (_) => Result(
+                    image: imageFile, predicted: predictedLabel, calories: caloriesInfo)));
         print('Predicted Label: $predictedLabel');
         print('Calories Info: $caloriesInfo');
       } else {
@@ -73,13 +81,15 @@ class _MainScreenState extends State<MainScreen> {
         child: _selectedIndex == 0 ? HomeScreen() : ProfilePage(),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _openCamera,
+        onPressed:(){
+          _openCamera(context);
+        },
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
-        child: Icon(
+        backgroundColor: AppColors.buttonColor,
+        child: const Icon(
           Icons.add,
           color: Colors.white,
         ),
-        backgroundColor: AppColors.buttonColor,
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: BottomAppBar(
@@ -96,9 +106,9 @@ class _MainScreenState extends State<MainScreen> {
                 IconButton(
                   icon: _selectedIndex == 1
                       ? Image.asset(
-                      "images/material-symbols_home-outline-rounded(1).png")
+                          "images/material-symbols_home-outline-rounded(1).png")
                       : Image.asset(
-                      "images/material-symbols_home-outline-rounded(2).png"),
+                          "images/material-symbols_home-outline-rounded(2).png"),
                   onPressed: () {
                     _onItemTapped(0);
                   },
@@ -121,11 +131,11 @@ class _MainScreenState extends State<MainScreen> {
                 IconButton(
                   icon: _selectedIndex == 0
                       ? Image.asset(
-                    "images/Group(1).png",
-                  )
+                          "images/Group(1).png",
+                        )
                       : Image.asset(
-                    "images/iconamoon_profile-fill.png",
-                  ),
+                          "images/iconamoon_profile-fill.png",
+                        ),
                   onPressed: () {
                     _onItemTapped(1);
                   },
