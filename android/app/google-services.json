@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "615638819825",
+    "project_id": "calcam-ff4a3",
+    "storage_bucket": "calcam-ff4a3.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:615638819825:android:9e61920ab97d40a8a39a50",
+        "android_client_info": {
+          "package_name": "com.example.cal_cam"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCKGn_YzrM-E2cBiX7jvlE1lKLICr-ZvGM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
