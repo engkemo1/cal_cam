@@ -1,10 +1,12 @@
 import 'package:cal_cam/app_colors.dart';
 import 'package:cal_cam/screens/home_screen.dart';
 import 'package:cal_cam/screens/result.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../logic/cal_cam_logic.dart';
 import '../profile_screen.dart';
 import 'dart:io';
 import 'package:dio/dio.dart';
@@ -33,8 +35,10 @@ class _MainScreenState extends State<MainScreen> {
     }
   }
 
-  Future<void> uploadImage(File imageFile, BuildContext context) async {
-    final dio = Dio();
+  Future<void> uploadImage(File imageFile, BuildContext context) async {    final SharedPreferences prefs = await SharedPreferences.getInstance();
+
+
+  final dio = Dio();
 
     try {
       // Prepare the image file as MultipartFile
@@ -59,11 +63,17 @@ class _MainScreenState extends State<MainScreen> {
         final responseBody = response.data;
         String predictedLabel = responseBody['predicted_label'];
         String caloriesInfo = responseBody['calories_info'];
+        int goal= prefs.getInt("goal") as int;
         Navigator.push(
             context,
             MaterialPageRoute(
                 builder: (_) => Result(
                     image: imageFile, predicted: predictedLabel, calories: caloriesInfo)));
+        FirebaseFirestore.instance.collection("users").doc(FirebaseAuth.instance.currentUser!.uid).update(
+            {
+              "consumed":int.tryParse(caloriesInfo.substring(0,3)),
+              "remaining":goal - (int.parse(caloriesInfo.substring(0,3)))
+            });
         print('Predicted Label: $predictedLabel');
         print('Calories Info: $caloriesInfo');
       } else {

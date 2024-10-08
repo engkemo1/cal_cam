@@ -6,6 +6,7 @@ import 'package:cal_cam/screens/widgets/custom_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../validators.dart';
 
@@ -20,11 +21,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController userNameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController phoneNumberController = TextEditingController();
+  final TextEditingController goalController = TextEditingController();
   final TextEditingController passController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _obscurePass = true;
 
   Future<void> _register() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+
     if (_formKey.currentState?.validate() ?? false) {
       try {
         UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
@@ -37,15 +41,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
           'userName': userNameController.text,
           'email': emailController.text,
           'phoneNumber': phoneNumberController.text,
+          'password': passController.text,
           "image":"",
           "consumed":0,
-          "goal":0,
+          "goal":int.tryParse(goalController.text),
           "remaining":0,
         });
+        await prefs.setInt('goal', int.tryParse(goalController.text)!);
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Registration successful')),
         );
+
         Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => MainScreen()),
@@ -118,6 +125,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   prefixIcon: const Text("+966", style: TextStyle(fontWeight: FontWeight.w600)),
                   validator: (v) => Validators.validatePhoneNumber(v, context),
                   hintText: "542121456",
+                ),
+                CustomTextField(
+                  controller: goalController,
+                  labelText: "Goal",
+                  validator: (v) => Validators.validateName(v, context),
+                  hintText: "21",
                 ),
                 CustomTextField(
                   suffixIcon: _obscurePass
